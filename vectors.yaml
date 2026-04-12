@@ -1,0 +1,30 @@
+vectors:
+  vector1: # Provided SV 1
+    x_pos: -12211757.775959
+    y_pos: 9429062.442371
+    z_pos: -21428647.221756
+    x_velocity: -2036.625445
+    y_velocity: -3312.346224
+    z_velocity: -247.989882
+    latd: -54.172764 # In degrees
+    lon: 293.841985 # In degrees
+    alt: 20040.916981 # In km
+  vector2: # Provided SV 2
+    x_pos: -15365447.628128
+    y_pos: 13189062.630639
+    z_pos: -17181708.494580
+    x_velocity: -3150.030141
+    y_velocity: -1134.516168
+    z_velocity: 1949.677579
+    latd: -40.278601 # In degrees
+    lon: 290.873364 # In degrees
+    alt: 20187.562120 # In km
+ground_site:
+  POGO:
+    geodetic_lat: 76.5150
+    lon: 291.4000
+    height: 132.0000
+    X: 544426.701
+    Y: -1389213.203
+    Z: 6180499.002
+    radius: 6358056.438
