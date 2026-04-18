@@ -6,12 +6,27 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 
+from keplarianElements import KeplerianElements
+
 
 # Read in a yaml that has all the initial vectors for position and velocity
 def read_in_yaml(file_name):
     with open(file_name, 'r') as f:
         data = yaml.load(f.read(), Loader=yaml.SafeLoader)
         return data
+
+def read_in_csv(file_name: str, headers=True):
+     '''Reads in a CSV file, if headers is set to True, then it skips the first row (default option)'''
+     return_data = []
+
+     with open(file_name, 'r') as f:
+          data = csv.reader(f)
+
+          if headers:
+               next(data)
+          for row in data:
+               return_data.append(row)
+     return return_data
 
 def print_data_to_csv(file_name, headers: list, data: list):
      '''Takes in a file name, the headers for your file, and a list of lists for your data. Built initially for Exam 2'''
@@ -806,3 +821,87 @@ def light_time_range(ground_site_tod, sv_pos_vector, sv_vel_vector, transponder_
 
      return dtprop
 
+def compute_hcw_matrix(pos_vec: list, vel_vec: list, mean_anomaly, time):
+     '''Given a postion vector, a velocity vector, a mean anomaly, and time, computes the HCW vector'''
+     component_matrix = [pos_vec[0], pos_vec[1], pos_vec[2], vel_vec[0], vel_vec[1], vel_vec[2]]
+
+     n = mean_anomaly
+
+     transformation_matrix = [[4-3*math.cos(n * time), 0, 0, (1/n)*math.sin(n*time), (2/n)*(1-math.cos(n*time)), 0],
+                              [6*(math.sin(n*time)-n*time), 1, 0, -(2/n)*(1-math.cos(n*time)), (1/n)*(4*math.sin(n*time) - 3*n*time), 0],
+                              [0, 0, math.cos(n*time), 0, 0, (1/n)*(math.sin(n*time))],
+                              [3*n*math.sin(n*time), 0, 0, math.cos(n*time), 2*math.sin(n*time), 0],
+                              [-6*n*(1-math.cos(n*time)), 0, 0, -2*math.sin(n*time), 4*math.cos(n*time)-3, 0],
+                              [0, 0, -n*math.sin(n*time), 0, 0, math.cos(n*time)]]
+     
+     return transformation_matrix
+
+def compute_hcw(pos_vec: list, vel_vec: list, mean_anomaly, time):
+     '''Given a postion vector, a velocity vector, a mean anomaly, and time, computes the HCW vector'''
+     component_matrix = [pos_vec[0], pos_vec[1], pos_vec[2], vel_vec[0], vel_vec[1], vel_vec[2]]
+
+     n = mean_anomaly
+
+     transformation_matrix = compute_hcw_matrix(pos_vec, vel_vec, mean_anomaly, time)
+
+     final_component_matrix = np.dot(transformation_matrix, component_matrix)
+
+     new_pos = [final_component_matrix[0], final_component_matrix[1], final_component_matrix[2]]
+     new_vel = [final_component_matrix[3], final_component_matrix[4], final_component_matrix[5]]
+
+     return (new_pos, new_vel)
+
+def get_uvw_transformation_matrix(pos_vec, vel_vec):
+     '''Returns the UVW transformation matrix for a given position and velocity'''
+     u = pos_vec/np.linalg.norm(pos_vec)
+     w = (np.cross(pos_vec, vel_vec))/np.linalg.norm(np.linalg.cross(pos_vec, vel_vec))
+     v = np.cross(w, u)
+
+     transform = [u, v, w]
+
+     return transform
+
+def convert_coordinates_to_uvw(pos_vec, vel_vec) -> tuple:
+     '''Convert given ECI coordinates (pos_vec) and its cooresponding velocities (vel_vec) to UVW coordinates.'''
+     transform = get_uvw_transformation_matrix(pos_vec, vel_vec)
+
+     uvw_coords = np.dot(transform, pos_vec)
+
+     return uvw_coords
+
+def convert_vel_to_uvw(pos_vec, vel_vec) -> tuple:
+     '''Convert given velocity coordinates (vel_vec) and its cooresponding ECI position (pos_vec) to UVW velocity.'''
+     transform = get_uvw_transformation_matrix(pos_vec, vel_vec)
+
+     uvw_coords = np.dot(transform, vel_vec)
+
+     return uvw_coords
+
+def compute_rss_diff(vec1: list, vec2: list):
+     '''Takes in two vectors, three elements each (X, Y, Z) and computes the RSS differences between the two. These could be position vectors, or velocity vectors, the equation is the same for both.'''
+     
+     x = math.pow(vec1[0] - vec2[0], 2)
+     y = math.pow(vec1[1] - vec2[1], 2)
+     z = math.pow(vec1[2] - vec2[2], 2)
+     
+     delta_diff = math.sqrt(x + y + z)
+
+     return delta_diff
+
+def compute_ke_diff(ke1: KeplerianElements, ke2: KeplerianElements):
+     '''Takes in two KeplarianElements classes and computes the Keplarian Element differences between the two'''
+     
+     return_dict = {}
+
+     return_dict['eci_pos'] = ke1.r_vector - ke2.r_vector
+     return_dict['eci_vel'] = ke1.r_dot_vector - ke2.r_dot_vector
+     return_dict['sma'] = ke1.semi_major_axis - ke2.semi_major_axis
+     return_dict['eccentricity'] = ke1.eccentricity - ke2.eccentricity
+     return_dict['inclination'] = math.degrees(ke1.inclination - ke2.inclination) # Degrees
+     return_dict['raan'] = math.degrees(ke1.raan - ke2.raan) # Degrees
+     return_dict['aop'] = math.degrees(ke1.determine_argument_of_periapsis() - ke2.determine_argument_of_periapsis()) # Degrees
+     return_dict['nu'] = math.degrees(ke1.nu - ke2.nu) # Degrees
+     return_dict['mean_anomaly'] = math.degrees(ke1.mean_anomaly - ke2.mean_anomaly) # Degrees
+     return_dict['arglat'] = math.degrees(ke1.compute_argument_of_latitude() - ke2.compute_argument_of_latitude()) # Degrees
+     
+     return return_dict

@@ -86,6 +86,7 @@ class KeplerianElements():
         return (((np.cross(self.r_dot_vector, self.h_vector))/self.mu)-self.r_vector/np.linalg.norm(self.r_vector))
 
     def determine_eccentricity_anomaly(self):
+        '''Returns in radians'''
         # return math.asin((math.sin(self.nu)*math.sqrt(1-math.pow(self.eccentricity, 2)))/(1+self.eccentricity*math.cos(self.nu)))
     
         n_e = np.dot(self.r_vector, self.r_dot_vector)/math.sqrt(self.mu*self.semi_major_axis)
@@ -141,7 +142,10 @@ class KeplerianElements():
 
     def determine_argument_of_periapsis(self):
         '''Returns in radians, convert to degrees if you need'''
-        return math.atan2(np.dot(self.h_vector/np.linalg.norm(self.h_vector), np.cross(self.n_hat, self.b_vector/np.linalg.norm(self.b_vector))), np.dot(self.n_hat, self.b_vector/np.linalg.norm(self.b_vector)))
+        h_hat = self.h_vector/np.linalg.norm(self.h_vector)
+        b_hat = self.b_vector/np.linalg.norm(self.b_vector)
+
+        return math.atan2(np.dot(h_hat, np.cross(self.n_hat, b_hat)), np.dot(self.n_hat, b_hat))
 
     def determine_orbital_period(self):
         return 2 * math.pi * math.sqrt((math.pow(self.semi_major_axis, 3))/self.mu)
@@ -471,19 +475,8 @@ class KeplerianElements():
         
         return (ecef_position, ecef_velocity)
     
+    def compute_argument_of_latitude(self):
+        '''Compute the argument of latitude. Returns in Radians'''
+        arglat = self.determine_argument_of_periapsis()+ self.determine_true_anomaly()
 
-    # def compute_ground_site_location(self):
-    #     '''Returns the ECEF coordinates using WGS84 defined values'''
-    #     # WGS-84 defined values
-    #     earth_radius = 6378137 # Meters
-    #     flattening = 1/298.257223563
-    #     earth_eccentricity = 0.0818191908
-    #     earth_eccentricity_squared = 0.0066943800
-
-    #     x = ((earth_radius/math.sqrt(1 - earth_eccentricity_squared*math.pow(math.sin()))) + h)
-
-    #     y = 
-
-    #     z = 
-
-    #     return [x, y, z]
+        return arglat
