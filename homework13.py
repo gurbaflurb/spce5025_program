@@ -4,6 +4,7 @@ import keHelperFunctions
 
 import math
 import datetime
+import dateutil
 import logging
 from pprint import pprint
 
@@ -114,11 +115,8 @@ def main():
 
     # Calulate the first UVW Diff outside of loop
     d_eci = p1_deputy_cur_pos - p1_chief_cur_pos
-    # d_dot_eci = p1_deupty_cur_vel - p1_chief_cur_vel
-    # angular_velocity = (np.cross(d_eci, d_dot_eci))/math.pow(np.linalg.norm(d_eci), 2)
     cur_uvw_transformation_matrix = keHelperFunctions.get_uvw_transformation_matrix(p1_chief_cur_pos, p1_chief_cur_vel)
     d_uvw = np.dot(cur_uvw_transformation_matrix, d_eci)
-    # d_dot_uvw = np.dot(cur_uvw_transformation_matrix, np.subtract(d_dot_eci, np.cross(angular_velocity, d_eci)))
 
     uvw_relative_pos_csv_data.append([d_uvw[1], d_uvw[0]])
     uvw_relative_pos_x_data.append(d_uvw[1])
@@ -131,15 +129,10 @@ def main():
 
         # Slide 46
         d_eci = deputy_new_pos - chief_new_pos
-        # d_dot_eci = deputy_new_vel - chief_new_vel
-
-        # angular_velocity = (np.cross(d_eci, d_dot_eci))/math.pow(np.linalg.norm(d_eci), 2)
 
         cur_uvw_transformation_matrix = keHelperFunctions.get_uvw_transformation_matrix(chief_new_pos, chief_new_vel)    
 
         d_uvw = np.dot(cur_uvw_transformation_matrix, d_eci)
-
-        # d_dot_uvw = np.dot(cur_uvw_transformation_matrix, np.subtract(d_dot_eci, np.cross(angular_velocity, d_eci)))
 
         uvw_relative_pos_csv_data.append([d_uvw[1], d_uvw[0]])
         uvw_relative_pos_x_data.append(d_uvw[1])
@@ -168,10 +161,84 @@ def main():
     # Problem 2
     logger.info('----- Problem 2 -----')
 
+    # Headers for this CSV file are as follows:
+    # Time | J2000 X | J2000 Y | J2000  Z | J2000 XD | J2000 YD | J2000 ZD | J2000 AX | J2000 AY | J2000 AZ | x_ecef | y_ecef | z_ecef | xd_ecef | yd_ecef | zd_ecef
     csv_data = keHelperFunctions.read_in_csv('Homework 13 Problem 2.csv')
 
-    # 
+    # Use ECEF values to estimate the time of the two ascending node crossings (Z_ECEF transitions from negative to positive)
+    # Loop to find passes
+    logger.info('Finding all passes in dataset')
+    glan_passes = []
+    last_row = []
+    for row in csv_data:
+        if last_row == []:
+            last_row = row
+            continue
+        if float(last_row[12]) <= 0 and float(row[12]) >= 0:
+            glan_passes.append([last_row, row])
+        last_row = row
 
+    logger.info('Estimating GLAN')
+
+    p2_pass_data = []
+
+    for passes in glan_passes:
+        before_pass = passes[0]
+        after_pass = passes[1]
+
+        t_before = dateutil.parser.parse(before_pass[0])
+        t_after = dateutil.parser.parse(after_pass[0])
+
+        z_ecef1 = float(before_pass[12])
+        z_ecef2 = float(after_pass[12])
+
+        estimated_pass_time = keHelperFunctions.time_linear_interpolation(t_before, t_after, z_ecef1, z_ecef2)
+
+        logger.info(f'Estimated Pass Time: {estimated_pass_time}')
+
+        # Using X_ECEF and Y_ECEF at the zero-crossing time, compute the geographic longitude of ascending node (GLAN) for each crossing
+
+        logger.info('Linear Interpolate to estimate SV position at Estimated Pass Time')
+        before_x_ecef = float(before_pass[10])
+        before_y_ecef = float(before_pass[11])
+        before_z_ecef = float(before_pass[12])
+
+        after_x_ecef = float(after_pass[10])
+        after_y_ecef = float(after_pass[11])
+        after_z_ecef = float(after_pass[12])
+
+        estimated_x_ecef = keHelperFunctions.position_linear_interpolation(t_before, t_after, estimated_pass_time, before_x_ecef, after_x_ecef)
+        estimated_y_ecef = keHelperFunctions.position_linear_interpolation(t_before, t_after, estimated_pass_time, before_y_ecef, after_y_ecef)
+        estimated_z_ecef = keHelperFunctions.position_linear_interpolation(t_before, t_after, estimated_pass_time, before_z_ecef, after_z_ecef)
+
+        ecef_pos_vector = [estimated_x_ecef, estimated_y_ecef, estimated_z_ecef]
+        logger.info(f'ESTIMATED ECEF COORDS AT PASS: {ecef_pos_vector}')
+
+        lat, lon, alt = keHelperFunctions.compute_lat_lon_alt(ecef_pos_vector)
+
+        logger.info(f'Estimated GLAN (Degrees): {math.degrees(lon)}')
+
+        p2_pass_data.append([estimated_pass_time, estimated_x_ecef, estimated_y_ecef, estimated_z_ecef, math.degrees(lon)])
+
+
+    # Estimate the orbit period (difference between node crossing times)        
+    logger.info('Estimating Orbit Period')
+
+    p2_orbit_period_seconds = (p2_pass_data[1][0] - p2_pass_data[0][0]).total_seconds()
+    
+    logger.info(f'Estimated Pass Time (seconds): {p2_orbit_period_seconds}')
+    logger.info(f'Estimated Pass Time (minutes): {p2_orbit_period_seconds/60}')
+
+    # Estimate the GLAN rate (difference between GLAN values divided by period)
+    p2_orbit_period_days = p2_orbit_period_seconds/86400
+    logger.info(f'Orbital Period (Days): {p2_orbit_period_days}')
+
+    p2_glan2_sub_glan1 = p2_pass_data[1][4] - p2_pass_data[0][4]
+    logger.info(f'GLAN2 - GLAN1: {p2_glan2_sub_glan1}')
+
+    glan_drift_rate = p2_glan2_sub_glan1/p2_orbit_period_days
+
+    logger.info(f'GLAN DRIFT RATE: {glan_drift_rate} deg/day')
 
 
 if __name__ == '__main__':

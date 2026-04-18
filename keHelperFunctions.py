@@ -905,3 +905,63 @@ def compute_ke_diff(ke1: KeplerianElements, ke2: KeplerianElements):
      return_dict['arglat'] = math.degrees(ke1.compute_argument_of_latitude() - ke2.compute_argument_of_latitude()) # Degrees
      
      return return_dict
+
+def linear_interpolate(x, x1, x2, y1, y2):
+     '''Performs the linear interpolate equation'''
+     return y1 + ((x-x1)/(x2-x1))*y2
+
+def time_linear_interpolation(time1: datetime.datetime, time2: datetime.datetime, z1: float, z2: float):
+     '''Implements linear interpolation to estimate when a SV crosses the equator given a time an z coordinate before and after'''
+
+     # Assume a common epoch of time1
+     # Assume the equator z_ecef coordinate is 0
+     x = 0
+
+     # Makes x1 and x2 z_ecef coordinate 1 and z_ecef coordinate 2 respectively
+     x1 = z1
+     x2 = z2
+
+     # Seconds since epoch which will always be 0 since our epoch is time1
+     y1 = 0
+
+     # Total seconds since the epoch
+     y2 = (time2 - time1).total_seconds()
+
+     # Linear Interpolation to estimate when the SV crosses the equator
+     seconds_at_equator = linear_interpolate(x, x1, x2, y1, y2)
+
+     time_of_pass = time1 + datetime.timedelta(seconds=seconds_at_equator)
+
+     return time_of_pass
+
+def position_linear_interpolation(time1: datetime.datetime, time2: datetime.datetime, time3: datetime.datetime, pos1: float, pos2: float):
+     '''Implements linear interpolation to estimate a coordinate position at a given time3 given a before and after coordinate (pos1 and pos2 respectively). time1 is the time at pos1 and time2 is the time at pos2'''
+
+     # Seconds since our epoch of time1
+     x = (time1 - time3).total_seconds()
+
+     # x1 and x2 are in seconds to maintain continuity
+     x1 = 0 # Always 0 since it would be time1 - time1
+     x2 = (time2 - time1).total_seconds()
+
+     # Our value for position 1 (At epoch)
+     y1 = pos1
+
+     # Our value for position 2 (After epoch and after time3)
+     y2 = pos2 
+
+     # Linear Interpolation to estimate when the SV crosses the equator
+     estimated_position = linear_interpolate(x, x1, x2, y1, y2)
+
+     return estimated_position
+
+def calculate_glan(ecef_x, ecef_y, n):
+     '''Takes in an ECEF X and Y coordinate, and the norm n of the ECEF vector and computes the GLAN from that'''
+     glan = math.acos(ecef_x/n)
+
+     if ecef_y >= 0:
+          return glan     
+     elif ecef_y < 0:
+          glan = (2*math.pi)-glan
+     
+     return glan
