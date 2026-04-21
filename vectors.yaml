@@ -1,16 +1,8 @@
 vectors:
-  vector1: # Chief SV
-    x_pos: 5504501.979137
-    y_pos: 4407131.290736
-    z_pos: 614552.795663
-    x_velocity: -4328.607519
-    y_velocity: 4891.156801
-    z_velocity: 3695.139758
-
-  vector2: # Deputy SV
-    x_pos: 5495520.274192
-    y_pos: 4406811.959112
-    z_pos: 616985.924735
-    x_velocity: -4336.950280
-    y_velocity: 4892.708101
-    z_velocity: 3698.323757
+  vector1:
+    x_pos: 18988410.689
+    y_pos: 5170910.062
+    z_pos: -17841865.424
+    x_velocity: 841.572707
+    y_velocity: 3292.087758
+    z_velocity: 1859.379002
