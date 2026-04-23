@@ -965,3 +965,67 @@ def calculate_glan(ecef_x, ecef_y, n):
           glan = (2*math.pi)-glan
      
      return glan
+
+def compute_keplarian_beta_angle(inclination, raan):
+     '''Implementation of forumla on slide 15'''
+     h_hat = [math.sin(inclination)*math.sin(raan), -math.sin(inclination)*math.sin(raan), math.cos(inclination)]
+
+     return h_hat
+
+def compute_time_to_apogee(ke1: KeplerianElements):
+     '''Implements the formula from slide 10.'''
+
+     # Find Perigee Passes
+     k = 0
+     if ke1.nu > math.pi:
+          k = 1
+
+     # Computes everything in radians
+     sv_time_of_flight = ke1.determine_time_of_flight(ke1.mean_anomaly)
+     cur_E0 = math.radians(ke1.nu)
+     n = ke1.mean_motion
+
+     time_to_apogee = (1/n)*(2*math.pi*k + math.pi - (cur_E0-ke1.eccentricity*math.sin(cur_E0))) + sv_time_of_flight
+
+     return time_to_apogee
+
+def compute_time_to_perigee(ke1: KeplerianElements):
+     ''''''
+     sv_time_of_flight = ke1.determine_time_of_flight(ke1.mean_anomaly)
+     n = ke1.mean_motion
+     cur_E0 = math.radians(ke1.nu)
+
+     time_to_perigee = (1/n)*(2*math.pi - (cur_E0 - ke1.eccentricity*math.sin(cur_E0))) + sv_time_of_flight
+
+     return time_to_perigee
+
+def compute_noon_and_midnight(sun_vector, raan, inclination, aop):
+     '''Implementation of slide 19. Takes in the RAAN, inclination, and Argument of Periapsis (aop)'''
+
+     x = [ math.cos(raan)*math.cos(aop) - math.sin(raan)*math.sin(aop)*math.cos(inclination), -math.cos(raan)*math.sin(aop) - math.sin(raan)*math.cos(aop)*math.cos(inclination), math.sin(raan)*math.sin(inclination)]
+     y = [ math.sin(raan)*math.cos(aop) + math.cos(raan)*math.sin(aop)*math.cos(inclination), -math.sin(raan)*math.sin(aop)+math.cos(raan)*math.cos(aop)*math.cos(inclination), -math.cos(raan)*math.sin(inclination)]
+     z = [ math.sin(inclination)*math.sin(aop), math.sin(inclination)*math.cos(aop), math.cos(inclination)]
+     
+     transformation_matrix = [x, y, z]
+
+     sun_vector_in_perifocal = np.dot(transformation_matrix, sun_vector)
+
+     noon = [sun_vector_in_perifocal[0], sun_vector_in_perifocal[1], 0]
+
+     midnight = np.multiply(-1, noon)
+
+     return (noon, midnight)
+
+def compute_noon_and_midnight_true_anomaly(noon_vector):
+     '''Implements the equations on slide 20'''
+     x = noon_vector[0]
+     y = noon_vector[1]
+
+     nu_noon = math.atan2(y, x)
+
+     nu_midnight = math.pi - nu_noon
+
+     if nu_midnight < 0:
+          nu_midnight = nu_midnight + (2*math.pi)
+
+     return (nu_noon, nu_midnight)

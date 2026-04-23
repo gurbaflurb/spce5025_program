@@ -35,6 +35,8 @@ def main():
 
     # Problem 1
     logger.info('----- Problem 1 -----')
+    logger.info('Keplarian Elements')
+    ke1.print_ke()
 
     # Using Time of Flight approach, estimate the times of the next five
     # 
@@ -54,6 +56,26 @@ def main():
     #
     # DATE | X | Y | Z | Xecef | Yecef | Zecef | A (SMA) | E (Eccentricity) | I (Inclination) | RAAN | ARGP | TA | MA | SVE | Orbit Beta Angle | SunPct | Eclipse (Denoted by *)
     #
+
+    time_to_apogee = keHelperFunctions.compute_time_to_apogee(ke1)
+    time_to_perigee = keHelperFunctions.compute_time_to_perigee(ke1)
+    logger.info(f'Time to Apogee: {time_to_apogee/60} minutes')
+    logger.info(f'Time to Perigee: {time_to_perigee/60} minutes')
+
+    ttp = ke1.determine_time_to_angle(2*math.pi)
+    tta = ke1.determine_time_to_angle(math.pi)
+    logger.info(f'Time to 2pi: {ttp}')
+    logger.info(f'Time to pi: {tta}')
+    
+
+    p1_jd = keHelperFunctions.convert_date_to_jd(epoch.year, epoch.month, epoch.day, epoch.hour, epoch.minute, epoch.second)
+
+    sun_vector = keHelperFunctions.determine_sun_vector_lf(p1_jd)
+
+    noon, midnight = keHelperFunctions.compute_noon_and_midnight(sun_vector, ke1.raan, ke1.inclination, ke1.aop)
+
+    logger.info(f'Noon Vector: {noon}')
+    logger.info(f'Midnight Vector: {midnight}')
 
 
 if __name__ == '__main__':
