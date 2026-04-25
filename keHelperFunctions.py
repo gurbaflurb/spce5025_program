@@ -1030,7 +1030,7 @@ def compute_time_to_perigee(ke1: KeplerianElements):
      n = ke1.mean_motion
      cur_E0 = math.radians(ke1.nu)
 
-     time_to_perigee = (1/n)*(2*math.pi - (cur_E0 - ke1.eccentricity*math.sin(cur_E0))) + sv_time_of_flight
+     time_to_perigee = (1/n)*((2*math.pi) - ke1.eccentricity*math.sin((2*math.pi))) - sv_time_of_flight
 
      return time_to_perigee
 

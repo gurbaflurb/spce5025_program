@@ -58,27 +58,29 @@ def main():
     #
 
     print()
-    print(f'Next Node Passes')
+    print(f'Next Ascending Node Passes')
     node_crossings = keHelperFunctions.estimate_node_crossing_times(ke1, ke1.aop, 5)
 
     for i in node_crossings:
         pass_time = epoch + datetime.timedelta(seconds=i)
         logger.info(f'{pass_time.date()} {pass_time.time()}')
 
-    exit(0)
-
+    print()
     logger.info('Next Perigee Passes')
-    
 
-    time_to_apogee = keHelperFunctions.compute_time_to_apogee(ke1)
     time_to_perigee = keHelperFunctions.compute_time_to_perigee(ke1)
-    logger.info(f'Time to Apogee: {time_to_apogee/60} minutes')
-    logger.info(f'Time to Perigee: {time_to_perigee/60} minutes')
+    logger.info(f'Time to Perigee: {time_to_perigee} seconds')
 
-    ttp = ke1.determine_time_to_angle(2*math.pi)
-    tta = ke1.determine_time_to_angle(math.pi)
-    logger.info(f'Time to 2pi: {ttp}')
-    logger.info(f'Time to pi: {tta}')
+    pass_time = epoch + datetime.timedelta(seconds=time_to_perigee)
+    logger.info(pass_time)
+
+    for i in range(1, 5):
+        pass_time = epoch  + datetime.timedelta(seconds=(time_to_perigee + ke1.tp*i))
+        logger.info(pass_time)
+
+
+    exit(0)
+    
     
 
     p1_jd = keHelperFunctions.convert_date_to_jd(epoch.year, epoch.month, epoch.day, epoch.hour, epoch.minute, epoch.second)
