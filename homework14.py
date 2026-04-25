@@ -57,6 +57,19 @@ def main():
     # DATE | X | Y | Z | Xecef | Yecef | Zecef | A (SMA) | E (Eccentricity) | I (Inclination) | RAAN | ARGP | TA | MA | SVE | Orbit Beta Angle | SunPct | Eclipse (Denoted by *)
     #
 
+    print()
+    print(f'Next Node Passes')
+    node_crossings = keHelperFunctions.estimate_node_crossing_times(ke1, ke1.aop, 5)
+
+    for i in node_crossings:
+        pass_time = epoch + datetime.timedelta(seconds=i)
+        logger.info(f'{pass_time.date()} {pass_time.time()}')
+
+    exit(0)
+
+    logger.info('Next Perigee Passes')
+    
+
     time_to_apogee = keHelperFunctions.compute_time_to_apogee(ke1)
     time_to_perigee = keHelperFunctions.compute_time_to_perigee(ke1)
     logger.info(f'Time to Apogee: {time_to_apogee/60} minutes')

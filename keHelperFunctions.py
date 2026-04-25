@@ -966,6 +966,41 @@ def calculate_glan(ecef_x, ecef_y, n):
      
      return glan
 
+def estimate_node_crossing_times(sv_ke: KeplerianElements, aop, num_of_node_crossings):
+     '''Takes in the current true anomaly, and the argument of periapsis and estimates the seconds until crossing time of the ascending node for the given number of crossings'''
+     crossings = []
+
+     v_node = 2*math.pi - aop
+     n = sv_ke.mean_motion
+
+     k = 0
+     if v_node < sv_ke.nu:
+          k = 1
+
+     E_sv = sv_ke.eccentricity_anomaly
+     E_node = sv_ke.determine_arbitrary_eccentricity_anomaly(v_node)
+
+     # print(f'Eccentricity Anomaly of SV: {math.degrees(E_sv)}')
+     # print(f'Eccentricity Anomaly of Node: {math.degrees(E_node)}')
+     # print(f'Perigee Pass Count: {k}')
+
+     tof_node = k*sv_ke.tp + (1/n)*(E_node - sv_ke.eccentricity*math.sin(E_node)) - (1/n)*(E_sv - sv_ke.eccentricity*math.sin(E_sv))
+
+     # print(f'TOF: {tof_node} seconds')
+
+     crossings.append(tof_node)
+
+     next_pass = tof_node
+
+     for i in range(1, num_of_node_crossings):
+          next_pass = next_pass + sv_ke.tp
+          # print(f'Next Pass {next_pass} seconds')
+          crossings.append(next_pass)
+
+     return crossings 
+
+
+
 def compute_keplarian_beta_angle(inclination, raan):
      '''Implementation of forumla on slide 15'''
      h_hat = [math.sin(inclination)*math.sin(raan), -math.sin(inclination)*math.sin(raan), math.cos(inclination)]
@@ -1029,3 +1064,77 @@ def compute_noon_and_midnight_true_anomaly(noon_vector):
           nu_midnight = nu_midnight + (2*math.pi)
 
      return (nu_noon, nu_midnight)
+
+def compute_keplarian_alpha_angle(sun_vector, pos_vec, vel_vec):
+     '''Takes in the current sun vector, position vector, and velocity vector. Implements equations from slide 24'''
+
+     r_cross_v = np.cross(pos_vec, vel_vec)
+
+     h_hat = r_cross_v/np.linalg.norm(r_cross_v)
+
+     dusk = np.cross(h_hat, sun_vector)/(np.linalg.norm(np.cross(h_hat, sun_vector)))
+
+     noon = np.cross(dusk, h_hat)
+
+     transformation_matrix = [np.transpose(noon), np.transpose(dusk), np.transpose(h_hat)]
+
+     pos_vec_at_noon = np.dot(transformation_matrix, pos_vec)
+
+     alpha = math.atan2(pos_vec_at_noon[1], pos_vec_at_noon[0])
+
+     return alpha
+
+
+def compute_angular_radius(distance, body_radius=6371.0088):
+     '''Takes in the distance of a SV from the center of its orbiting body in kilometers. We generally only care about the Earth, so the body radius default is 6371.0088km from WGS-84'''
+     
+     angular_radius = math.asin(body_radius/distance)
+
+     return angular_radius
+
+def compute_sun_vehicle_earth_angle(sun_vector, pos_vec):
+     '''Computes the Sun-Vehicle-Earth angle given a sun vector, and the position vector. Implements equations from slide 29'''
+     n_vector = np.multiply(-1, pos_vec)
+
+     r_sv_vector = np.subtract(sun_vector, n_vector)
+
+     numerator = np.dot(n_vector, r_sv_vector)
+     denominator = np.linalg.norm(n_vector)*np.linalg.norm(r_sv_vector)
+
+     theta = math.acos(numerator/denominator)
+
+     return theta
+
+
+def compute_eclipse_type(alpha, p, theta):
+     '''Takes in alpha, p and theta, angular radi to the sun and to a given body (Usually Earth) and the angle between the two. Then computes what kind of eclipse is occuring.'''
+     # 0 means eclipse is not possible
+
+     if theta > (p+alpha):
+          return 0 
+     elif (p-alpha) > theta:
+          return 2
+     elif (p+alpha) > theta and theta > (p-alpha):
+          return 1
+     
+     raise NotImplemented(f'Angle makes no sense: \ntheta: {theta}\np: {p}\nAlpha: {alpha}\n')
+     
+
+def estimate_eclipse_duration(beta, p):
+     '''Takes in the beta angle, and the Earth angular radi and computes the duration of the eclipse. Implemented equations from slide 33 and 34'''
+
+     epsilon = 0
+     
+     if beta < p:
+          epsilon = 2 * math.acos(math.cos(p)/math.cos(beta))
+
+
+def compute_eclipse(beta, p):
+     '''Simple method that returns if there is currently an eclipse given a beta angle and Earth radi'''
+     if beta < p:
+          return True
+     return False
+
+def perform_gradient_search():
+     '''Performs a gradient search for '''
+     pass

@@ -99,8 +99,14 @@ class KeplerianElements():
         return r
     
     def determine_arbitrary_eccentricity_anomaly(self, nu):
-        return math.asin((math.sin(nu)*math.sqrt(1-math.pow(self.eccentricity, 2)))/(1+self.eccentricity*math.cos(nu)))
+        '''Returns in Radians'''
+        e = math.asin((math.sin(nu)*math.sqrt(1-math.pow(self.eccentricity, 2)))/(1+self.eccentricity*math.cos(nu)))
 
+        # Correct for quadrant
+        if e < 0:
+          e = (2*math.pi) + e
+
+        return e
 
         n_e = np.dot(r_vector, r_dot_vector)/math.sqrt(self.mu*self.semi_major_axis)
         d_e = 1 - (np.linalg.norm(r_vector)/self.semi_major_axis)
