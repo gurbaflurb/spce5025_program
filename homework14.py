@@ -33,7 +33,7 @@ def main():
     epoch = datetime.datetime(2012, 6, 1, 0, 0, 0)
 
     # Problem 1
-    logger.info('----- Problem 1 -----')
+    print('----- Problem 1 -----')
     logger.info('Keplarian Elements')
     ke1.print_ke()
 
@@ -57,7 +57,7 @@ def main():
     #
 
     print('\n')
-    print(f'Part 1. Next Ascending Node Passes')
+    print(f'----- Part 1. Next Ascending Node Passes -----')
     node_crossings = keHelperFunctions.estimate_node_crossing_times(ke1, ke1.aop, 5)
 
     j = 1
@@ -67,7 +67,7 @@ def main():
         j += 1
 
     print('\n')
-    logger.info('Part 2. Next Perigee Passes')
+    print('----- Part 2. Next Perigee Passes -----')
 
     time_to_perigee = keHelperFunctions.compute_time_to_perigee(ke1)
     logger.info(f'Time to Perigee: {time_to_perigee} seconds')
@@ -82,7 +82,7 @@ def main():
     
     print('\n')
 
-    logger.info('Part 3. Next Eclipse Midnight Times')
+    print('----- Part 3. Next Eclipse Midnight Times -----')
 
     p1_jd = keHelperFunctions.convert_date_to_jd(epoch.year, epoch.month, epoch.day, epoch.hour, epoch.minute, epoch.second)
 
