@@ -504,7 +504,7 @@ def compute_lat_lon_alt(position_vector) -> tuple:
 
      longitude = math.atan2(position_vector[1], position_vector[0])
      if longitude < 0:
-          longitude = longitude + 2*math.pi
+          longitude = longitude + (2*math.pi)
 
      return (cur_lat, longitude, altitude)
 
@@ -619,7 +619,7 @@ def compute_lat_lon_ecef(r_vector) -> tuple:
      lon = math.atan2(u[1], u[0])
 
      if lon < 0:
-          lon = lon + 2*math.pi
+          lon = lon + (2*math.pi)
      
      lat = math.asin(u[2])
 
@@ -980,13 +980,13 @@ def estimate_node_crossing_times(sv_ke: KeplerianElements, aop, num_of_node_cros
      E_sv = sv_ke.eccentricity_anomaly
      E_node = sv_ke.determine_arbitrary_eccentricity_anomaly(v_node)
 
-     # print(f'Eccentricity Anomaly of SV: {math.degrees(E_sv)}')
-     # print(f'Eccentricity Anomaly of Node: {math.degrees(E_node)}')
-     # print(f'Perigee Pass Count: {k}')
+     print(f'Eccentricity Anomaly of SV: {math.degrees(E_sv)}')
+     print(f'Eccentricity Anomaly of Node: {math.degrees(E_node)}')
+     print(f'Perigee Pass Count: {k}')
 
      tof_node = k*sv_ke.tp + (1/n)*(E_node - sv_ke.eccentricity*math.sin(E_node)) - (1/n)*(E_sv - sv_ke.eccentricity*math.sin(E_sv))
 
-     # print(f'TOF: {tof_node} seconds')
+     print(f'TOF: {tof_node} seconds')
 
      crossings.append(tof_node)
 
@@ -1001,11 +1001,13 @@ def estimate_node_crossing_times(sv_ke: KeplerianElements, aop, num_of_node_cros
 
 
 
-def compute_keplarian_beta_angle(inclination, raan):
+def compute_keplarian_beta_angle(sun_vector, ke1: KeplerianElements):
      '''Implementation of forumla on slide 15'''
-     h_hat = [math.sin(inclination)*math.sin(raan), -math.sin(inclination)*math.sin(raan), math.cos(inclination)]
+     h_hat = np.cross(ke1.r_vector, ke1.r_dot_vector)
 
-     return h_hat
+     pt1 = np.dot(sun_vector, h_hat)
+
+     return math.asin(pt1/(np.linalg.norm(sun_vector)*np.linalg.norm(h_hat)))
 
 def compute_time_to_apogee(ke1: KeplerianElements):
      '''Implements the formula from slide 10.'''
@@ -1025,25 +1027,47 @@ def compute_time_to_apogee(ke1: KeplerianElements):
      return time_to_apogee
 
 def compute_time_to_perigee(ke1: KeplerianElements):
-     ''''''
+     '''Returns the number of seconds for the SV to reach perigee'''
      sv_time_of_flight = ke1.determine_time_of_flight(ke1.mean_anomaly)
      n = ke1.mean_motion
-     cur_E0 = math.radians(ke1.nu)
 
      time_to_perigee = (1/n)*((2*math.pi) - ke1.eccentricity*math.sin((2*math.pi))) - sv_time_of_flight
 
      return time_to_perigee
 
-def compute_noon_and_midnight(sun_vector, raan, inclination, aop):
-     '''Implementation of slide 19. Takes in the RAAN, inclination, and Argument of Periapsis (aop)'''
+def compute_time_to_midnight(ke1: KeplerianElements, midnight_nu):
+     '''Computes the time of flight to midnight. Takes in values as radians'''
+     
+     n = ke1.mean_motion
+     E_sv = ke1.eccentricity_anomaly
+     E_mid = ke1.determine_arbitrary_eccentric_anomaly(math.degrees(midnight_nu))
+     
+     k = 0
 
+     if midnight_nu < ke1.nu:
+          k = 1
+
+     time_to_midnight = k*ke1.tp + (1/n)*(E_mid - ke1.eccentricity*math.sin(E_mid)) - (1/n)*(E_sv - ke1.eccentricity*math.sin(E_sv))
+
+     return time_to_midnight
+
+
+
+
+def compute_perifocal_to_eci_transformation_matrix(raan, inclination, aop):
+     '''Returns the transformation matrix for perifocal to ECI'''
      x = [ math.cos(raan)*math.cos(aop) - math.sin(raan)*math.sin(aop)*math.cos(inclination), -math.cos(raan)*math.sin(aop) - math.sin(raan)*math.cos(aop)*math.cos(inclination), math.sin(raan)*math.sin(inclination)]
      y = [ math.sin(raan)*math.cos(aop) + math.cos(raan)*math.sin(aop)*math.cos(inclination), -math.sin(raan)*math.sin(aop)+math.cos(raan)*math.cos(aop)*math.cos(inclination), -math.cos(raan)*math.sin(inclination)]
      z = [ math.sin(inclination)*math.sin(aop), math.sin(inclination)*math.cos(aop), math.cos(inclination)]
-     
-     transformation_matrix = [x, y, z]
 
-     sun_vector_in_perifocal = np.dot(transformation_matrix, sun_vector)
+     return [x, y, z]
+
+def compute_noon_and_midnight(sun_vector, raan, inclination, aop):
+     '''Implementation of slide 19. Takes in the RAAN, inclination, and Argument of Periapsis (aop)'''
+     
+     transformation_matrix = compute_perifocal_to_eci_transformation_matrix(raan, inclination, aop)
+
+     sun_vector_in_perifocal = np.dot(np.transpose(transformation_matrix), sun_vector)
 
      noon = [sun_vector_in_perifocal[0], sun_vector_in_perifocal[1], 0]
 
@@ -1052,16 +1076,17 @@ def compute_noon_and_midnight(sun_vector, raan, inclination, aop):
      return (noon, midnight)
 
 def compute_noon_and_midnight_true_anomaly(noon_vector):
-     '''Implements the equations on slide 20'''
+     '''Implements the equations on slide 20. Takes in the noon vector from compute_noon_and_midnight (Which has performed the ) sun vector in the perifocal reference frame and computes the true anomaly '''
+
      x = noon_vector[0]
      y = noon_vector[1]
 
      nu_noon = math.atan2(y, x)
 
-     nu_midnight = math.pi - nu_noon
+     if nu_noon < 0:
+          nu_noon = nu_noon + 2*math.pi
 
-     if nu_midnight < 0:
-          nu_midnight = nu_midnight + (2*math.pi)
+     nu_midnight = (math.pi + nu_noon) % (2*math.pi)
 
      return (nu_noon, nu_midnight)
 
@@ -1085,7 +1110,7 @@ def compute_keplarian_alpha_angle(sun_vector, pos_vec, vel_vec):
      return alpha
 
 
-def compute_angular_radius(distance, body_radius=6371.0088):
+def compute_angular_radius(distance, body_radius=6378.1370):
      '''Takes in the distance of a SV from the center of its orbiting body in kilometers. We generally only care about the Earth, so the body radius default is 6371.0088km from WGS-84'''
      
      angular_radius = math.asin(body_radius/distance)
@@ -1127,7 +1152,12 @@ def estimate_eclipse_duration(beta, p):
      
      if beta < p:
           epsilon = 2 * math.acos(math.cos(p)/math.cos(beta))
+     
+     return epsilon
 
+def compute_eclipse_duration(ke1: KeplerianElements, epsilon):
+     '''Computes the length of an eclipse for a given SV and the angular size of the eclipse as epsilon (in radians)'''
+     return (ke1.tp/(2*math.pi))*epsilon
 
 def compute_eclipse(beta, p):
      '''Simple method that returns if there is currently an eclipse given a beta angle and Earth radi'''

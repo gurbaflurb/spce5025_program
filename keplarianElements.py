@@ -99,7 +99,7 @@ class KeplerianElements():
         return r
     
     def determine_arbitrary_eccentricity_anomaly(self, nu):
-        '''Returns in Radians'''
+        '''Returns in Radians, takes in a nu in radians'''
         e = math.asin((math.sin(nu)*math.sqrt(1-math.pow(self.eccentricity, 2)))/(1+self.eccentricity*math.cos(nu)))
 
         # Correct for quadrant
