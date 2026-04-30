@@ -1209,3 +1209,9 @@ def estimate_plane_change_burn_ke(ke1: KeplerianElements, post_inclination):
      ke2 = KeplerianElements(ke1.r_vector[0], ke1.r_vector[1], ke1.r_vector[2], v_post[0], v_post[1], v_post[2])
 
      return (ke2, delta_v)
+
+def estimate_sma_change(tp, delta_sma):
+     '''Takes in the current Orbital Period (TP), and the delta SMA between the current SMA and the new SMA in meters. Returns the Delta-V required to change the given Orbit SMA to the final SMA'''
+     delta_v = (math.pi/tp)*delta_sma
+
+     return delta_v

@@ -1,7 +1,3 @@
-from keplarianElements import KeplerianElements
-from groundSite import GroundSite
-import keHelperFunctions
-
 import math
 import datetime
 import dateutil
@@ -11,6 +7,10 @@ from pprint import pprint
 import tabulate
 import matplotlib.pyplot as plt
 import numpy as np
+
+from keplarianElements import KeplerianElements
+from groundSite import GroundSite
+import keHelperFunctions
 
 logger = logging.getLogger(__name__)
 
@@ -31,20 +31,23 @@ def main():
 
     # Epoch provided: 2012-10-04/050044.523
     epoch = datetime.datetime(2012, 10, 4, 0, 0, 0) # Double check this, the epoch provided isn't the same as what I have in here.
+    logger.info('Keplarian Elements')
+    ke1.print_ke()
+    print()
+
 
     # Problem 1
     print('----- Problem 1 -----')
-    logger.info('Keplarian Elements')
-    ke1.print_ke()
-
-    print()
     # Compute the following:
     # Compute the Delta-V required to change the inclination by 5 degrees
     p1_delta_v = keHelperFunctions.estimate_plane_change_maneuver(ke1, 5)
     logger.info(f'Delta-V required to change inclination by 5 degrees: {p1_delta_v}')
     print()
 
+
+    # Problem 2
     # Apply impulsive burn to vector and compute post-burn Keplarian elements to verify results
+    print('----- Problem 2 -----')
     logger.info('Computing verification of Delta-V...')
     p1_ke2, p1_delta_v_check = keHelperFunctions.estimate_plane_change_burn_ke(ke1, 5)
     logger.info(f'Delta-V check for changing inclination by 5 degrees: {p1_delta_v_check}')
@@ -61,22 +64,45 @@ def main():
     logger.info(f'TP Diff: {ke1.tp - p1_ke2.tp}')
     logger.info(f'Apogee Radii Diff: {ke1.apogee_radii - p1_ke2.apogee_radii}')
     logger.info(f'Perigee Radii Diff: {ke1.perigee_radii - p1_ke2.perigee_radii}')
-
+    print()
     
 
-
+    # Problem 3
     # Delta-V required to change SMA by 26km
+    print('----- Problem 3 -----')
+    p3_delta_v = keHelperFunctions.estimate_sma_change(ke1.tp, 26*1000)
+    logger.info(f'Delta-V to adjust Orbital Period by 26km: {p3_delta_v} m/s')
+
+    print()
+
+
+    # Problem 4
     # Verify by applying impulsive Delta-V in velocity direction and compute new Keplerian elements
+    print('----- Problem 4 -----')
+    
+
+    print()
 
 
+    # Problem 5
     # Delta-SMA resulting from Delta-V=1m/s
+    print('----- Problem 5 -----')
+
+    print()
 
 
+    # Problem 6
     # Phase rate between given orbit and one with period of 728.0 minutes
+    print('----- Problem 6 -----')
+
+    print()
 
 
+    # Problem 7
     # Time required for phase angle to change by 30 degrees
+    print('----- Problem 7 -----')
 
+    print()
 
 if __name__ == '__main__':
     main()
