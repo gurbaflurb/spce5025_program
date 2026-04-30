@@ -1168,3 +1168,44 @@ def compute_eclipse(beta, p):
 def perform_gradient_search():
      '''Performs a gradient search for '''
      pass
+
+def estimate_plane_change_maneuver(ke1: KeplerianElements, inclination_change):
+     ''''''
+     v_x_pt = math.pow(ke1.r_dot_vector[0], 2)
+     v_y_pt = math.pow(ke1.r_dot_vector[1], 2)
+     v_z_pt = math.pow(ke1.r_dot_vector[2], 2)
+
+     v_mag = math.sqrt(v_x_pt + v_y_pt + v_z_pt)
+
+     delta_v = 2*v_mag*math.sin(math.radians(inclination_change)/2)
+
+     return delta_v
+
+def estimate_plane_change_burn_ke(ke1: KeplerianElements, post_inclination):
+     '''Estimates the Delta-V for an inclination change. Assumes the given ke1 position is at the ascending or descending node. Takes in the post_inclination in degrees'''
+     v_x_pt = math.pow(ke1.r_dot_vector[0], 2)
+     v_y_pt = math.pow(ke1.r_dot_vector[1], 2)
+     v_z_pt = math.pow(ke1.r_dot_vector[2], 2)
+
+     v_mag = math.sqrt(v_x_pt + v_y_pt + v_z_pt)
+
+     post_inclination_radians = math.radians(post_inclination) + ke1.inclination
+
+     # We are assuming RAAN stays constant
+     h_post = [math.sin(post_inclination_radians)*math.sin(ke1.raan),
+               -math.sin(post_inclination_radians)*math.cos(ke1.raan),
+               math.cos(post_inclination_radians)]
+
+     v_post_pt1 = np.cross(h_post, ke1.r_vector)
+
+     v_post_pt2 = np.linalg.norm(h_post) * np.linalg.norm(ke1.r_vector)
+
+     v_hat_post = v_post_pt1/v_post_pt2
+
+     v_post = v_mag * v_hat_post
+
+     delta_v = v_post - ke1.r_dot_vector
+
+     ke2 = KeplerianElements(ke1.r_vector[0], ke1.r_vector[1], ke1.r_vector[2], v_post[0], v_post[1], v_post[2])
+
+     return (ke2, delta_v)
