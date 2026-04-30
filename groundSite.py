@@ -7,13 +7,16 @@ import keHelperFunctions
 
 class GroundSite():
     '''Class GroundSite takes in a geodetic latitude, longitude, height, and the radius from the center of the earth to the site.'''
-    def __init__(self, lat, lon, height, X, Y, Z, radius):
+    def __init__(self, lat, lon, height): #, X, Y, Z, radius):
         self.lat = lat
         self.lon = lon
         self.height = height
-        self.r_vector = [X, Y, Z] # AKA ECEF coords
-        self.radius = radius
         self.ecef_coords = self.compute_ecef_coords()
+        self.r_vector = self.ecef_coords
+        self.radis = np.linalg.norm(self.r_vector)
+        # self.r_vector = [X, Y, Z] # AKA ECEF coords
+        # self.radius = radius
+        
 
 
     def compute_relative_pos(self, sv_pos: list):

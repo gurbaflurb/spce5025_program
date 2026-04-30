@@ -1,8 +1,25 @@
 vectors:
-  vector1:
-    x_pos: 26324639.619
-    y_pos: -5219093.894
-    z_pos: -0.875
-    x_velocity: 430.272110
-    y_velocity: 2169.355094
-    z_velocity: 3156.244863
+  vector1: # Target Vehicle
+    x_pos: -7202235.416
+    y_pos: 783685.330
+    z_pos: 2839574.411
+    x_velocity: -1594.528305
+    y_velocity: -6621.500276
+    z_velocity: -2197.570004
+  vector2: # Chaser Vehicle
+    x_pos: -6491589.449
+    y_pos: 2613001.096
+    z_pos: 3352419.284
+    x_velocity: -3259.157555
+    y_velocity: -6217.288683
+    z_velocity: -1448.482747
+
+ground_site:
+  DGSA:
+    geodetic_lat: -7.2700
+    lon: 72.3700
+    height: -68.4
+  VTSA:
+    geodetic_lat: 34.8233
+    lon: 239.4983
+    height: 269.4

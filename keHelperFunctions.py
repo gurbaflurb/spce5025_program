@@ -1168,3 +1168,18 @@ def compute_eclipse(beta, p):
 def perform_gradient_search():
      '''Performs a gradient search for '''
      pass
+
+def estimate_inclination_burn(ke1: KeplerianElements, post_inclination):
+     '''Estimates the Delta-V for an inclination change. Assumes the given ke1 position is at the ascending or descending node. Takes in the post_inclination in degrees'''
+     v_x_pt = math.pow(ke1.r_dot_vector[0], 2)
+     v_y_pt = math.pow(ke1.r_dot_vector[1], 2)
+     v_z_pt = math.pow(ke1.r_dot_vector[2], 2)
+
+     v_mag = math.sqrt(v_x_pt + v_y_pt + v_z_pt)
+
+     post_inclination_radians = math.radians(post_inclination)
+
+     h_post = [math.sin(post_inclination_radians)*math.sin(omega),
+               -math.sin(post_inclination_radians)*math.cos(omega),
+               math.cos(post_inclination_radians)]
+
