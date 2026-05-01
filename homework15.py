@@ -1,3 +1,4 @@
+import argparse
 import math
 import datetime
 import dateutil
@@ -8,15 +9,19 @@ import tabulate
 import matplotlib.pyplot as plt
 import numpy as np
 
+logger = logging.getLogger(__name__)
+
 from keplarianElements import KeplerianElements
 from groundSite import GroundSite
 import keHelperFunctions
 
-logger = logging.getLogger(__name__)
 
-def main():
+def main(args):
 
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
+    else:
+        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
     vectors_file = 'vectors.yaml'
     vector_data = keHelperFunctions.read_in_yaml(vectors_file)
@@ -70,31 +75,45 @@ def main():
     # Problem 3
     # Delta-V required to change SMA by 26km
     print('----- Problem 3 -----')
-    p3_delta_v = keHelperFunctions.estimate_sma_change(ke1.tp, 26*1000)
+    logger.info('Computing Delta-V to change SMA by 26km or 26,000m')
+    p3_delta_v = keHelperFunctions.estimate_in_plane_burn(ke1.tp, 26*1000)
     logger.info(f'Delta-V to adjust Orbital Period by 26km: {p3_delta_v} m/s')
-
     print()
 
 
     # Problem 4
     # Verify by applying impulsive Delta-V in velocity direction and compute new Keplerian elements
     print('----- Problem 4 -----')
-    
-
+    logger.info('Verifying Delta-V computed to change SMA by 26km or 26,000m')
+    p4_ke2 = keHelperFunctions.apply_delta_v_ke(ke1, p3_delta_v)
+    logger.info('Keplerian Elements with Delta-V applied to raise SMA by 26km')
+    p4_ke2.print_ke()
+    print()
+    logger.info(f'SMA Diff: {ke1.semi_major_axis - p4_ke2.semi_major_axis}')
+    logger.info(f'Eccentricity Diff: {ke1.eccentricity - p4_ke2.eccentricity}')
+    logger.info(f'Inclination Diff: {math.degrees(ke1.inclination - p4_ke2.inclination)}')
+    logger.info(f'RAAN Diff: {math.degrees(ke1.raan - p4_ke2.raan)}')
+    logger.info(f'AoP Diff: {math.degrees(ke1.aop - p4_ke2.aop)}')
+    logger.info(f'True Anomaly Diff: {math.degrees(ke1.nu - p4_ke2.nu)}')
+    logger.info(f'TP Diff: {ke1.tp - p4_ke2.tp}')
+    logger.info(f'Apogee Radii Diff: {ke1.apogee_radii - p4_ke2.apogee_radii}')
+    logger.info(f'Perigee Radii Diff: {ke1.perigee_radii - p4_ke2.perigee_radii}')
     print()
 
 
     # Problem 5
     # Delta-SMA resulting from Delta-V=1m/s
     print('----- Problem 5 -----')
-
+    logger.info('Applying a Delta-V of 1 m/s to provided Keplerian Elements')
+    p5_ke2 = keHelperFunctions.apply_delta_v_ke(ke1, 1)
+    logger.info(f'SMA Diff with 1 m/s Delta-V Applied: {ke1.semi_major_axis - p5_ke2.semi_major_axis}')
     print()
 
 
     # Problem 6
     # Phase rate between given orbit and one with period of 728.0 minutes
     print('----- Problem 6 -----')
-
+    
     print()
 
 
@@ -105,4 +124,8 @@ def main():
     print()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-v', '--verbose', default=False, action='store_true', help='Turn on Debug verbosity. DEFAULT=False')
+    
+    main(parser.parse_args())

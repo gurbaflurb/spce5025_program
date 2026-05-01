@@ -2,12 +2,14 @@ import yaml
 import math
 import datetime
 import csv
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from keplarianElements import KeplerianElements
 
+_LOGGER = logging.getLogger(__name__)
 
 # Read in a yaml that has all the initial vectors for position and velocity
 def read_in_yaml(file_name):
@@ -1170,7 +1172,7 @@ def perform_gradient_search():
      pass
 
 def estimate_plane_change_maneuver(ke1: KeplerianElements, inclination_change):
-     ''''''
+     '''Given a Keplerian Elements object, and the delta change in inclination (in degrees), estimates the Delta-V to perform such a change'''
      v_x_pt = math.pow(ke1.r_dot_vector[0], 2)
      v_y_pt = math.pow(ke1.r_dot_vector[1], 2)
      v_z_pt = math.pow(ke1.r_dot_vector[2], 2)
@@ -1191,10 +1193,14 @@ def estimate_plane_change_burn_ke(ke1: KeplerianElements, post_inclination):
 
      post_inclination_radians = math.radians(post_inclination) + ke1.inclination
 
+     _LOGGER.debug(f'Post Inclination Radians: {post_inclination_radians}')
+
      # We are assuming RAAN stays constant
      h_post = [math.sin(post_inclination_radians)*math.sin(ke1.raan),
                -math.sin(post_inclination_radians)*math.cos(ke1.raan),
                math.cos(post_inclination_radians)]
+
+     _LOGGER.debug(f'H_hat_post: {h_post}')
 
      v_post_pt1 = np.cross(h_post, ke1.r_vector)
 
@@ -1202,16 +1208,35 @@ def estimate_plane_change_burn_ke(ke1: KeplerianElements, post_inclination):
 
      v_hat_post = v_post_pt1/v_post_pt2
 
+     _LOGGER.debug(f'V_hat_post: {v_hat_post}')
+
      v_post = v_mag * v_hat_post
 
+     _LOGGER.debug(f'V_post: {v_post}')
+
      delta_v = v_post - ke1.r_dot_vector
+
+     _LOGGER.debug(f'Delta-V: {delta_v}')
 
      ke2 = KeplerianElements(ke1.r_vector[0], ke1.r_vector[1], ke1.r_vector[2], v_post[0], v_post[1], v_post[2])
 
      return (ke2, delta_v)
 
-def estimate_sma_change(tp, delta_sma):
+def estimate_in_plane_burn(tp, delta_sma):
      '''Takes in the current Orbital Period (TP), and the delta SMA between the current SMA and the new SMA in meters. Returns the Delta-V required to change the given Orbit SMA to the final SMA'''
      delta_v = (math.pi/tp)*delta_sma
 
      return delta_v
+
+def apply_delta_v_ke(ke1: KeplerianElements, delta_v) -> KeplerianElements:
+     '''Given a Keplerian Elements Object and a delta_v, this returns a new Keplaerian Element object with the delta-v applied at the instant the Keplerian Element object is at.'''
+
+     v_hat = ke1.r_dot_vector/np.linalg.norm(ke1.r_dot_vector)
+     _LOGGER.debug(f'V_hat: {v_hat}')
+
+     v_post = (np.linalg.norm(ke1.r_dot_vector)+delta_v) * v_hat
+     _LOGGER.debug(f'V_post: {v_post}')
+
+     ke2 = KeplerianElements(ke1.r_vector[0], ke1.r_vector[1], ke1.r_vector[2], v_post[0], v_post[1], v_post[2])
+
+     return ke2
