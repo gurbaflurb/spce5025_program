@@ -38,6 +38,7 @@ def main(args):
     epoch = datetime.datetime(2012, 10, 4, 0, 0, 0) # Double check this, the epoch provided isn't the same as what I have in here.
     logger.info('Keplarian Elements')
     ke1.print_ke()
+    print(f'Mean Anomaly: {math.degrees(ke1.mean_anomaly)}')
     print()
 
 
@@ -59,6 +60,7 @@ def main(args):
     logger.info(f'Delta-V check for changing inclination by 5 degrees (Magnitude): {np.linalg.norm(p1_delta_v_check)}')
     logger.info(f'New Keplarian Elements post 5 degree burn')
     p1_ke2.print_ke()
+    print(f'Mean Anomaly: {math.degrees(p1_ke2.mean_anomaly)}')
     print()
     logger.info(f'SMA Diff: {ke1.semi_major_axis - p1_ke2.semi_major_axis}')
     logger.info(f'Eccentricity Diff: {ke1.eccentricity - p1_ke2.eccentricity}')
@@ -66,6 +68,7 @@ def main(args):
     logger.info(f'RAAN Diff: {math.degrees(ke1.raan - p1_ke2.raan)}')
     logger.info(f'AoP Diff: {math.degrees(ke1.aop - p1_ke2.aop)}')
     logger.info(f'True Anomaly Diff: {math.degrees(ke1.nu - p1_ke2.nu)}')
+    logger.info(f'Mean Anomaly Diff: {math.degrees(ke1.mean_anomaly - p1_ke2.mean_anomaly)}')
     logger.info(f'TP Diff: {ke1.tp - p1_ke2.tp}')
     logger.info(f'Apogee Radii Diff: {ke1.apogee_radii - p1_ke2.apogee_radii}')
     logger.info(f'Perigee Radii Diff: {ke1.perigee_radii - p1_ke2.perigee_radii}')
@@ -88,6 +91,7 @@ def main(args):
     p4_ke2 = keHelperFunctions.apply_delta_v_ke(ke1, p3_delta_v)
     logger.info('Keplerian Elements with Delta-V applied to raise SMA by 26km')
     p4_ke2.print_ke()
+    print(f'Mean Anomaly: {math.degrees(p4_ke2.mean_anomaly)}')
     print()
     logger.info(f'SMA Diff: {ke1.semi_major_axis - p4_ke2.semi_major_axis}')
     logger.info(f'Eccentricity Diff: {ke1.eccentricity - p4_ke2.eccentricity}')
@@ -95,6 +99,7 @@ def main(args):
     logger.info(f'RAAN Diff: {math.degrees(ke1.raan - p4_ke2.raan)}')
     logger.info(f'AoP Diff: {math.degrees(ke1.aop - p4_ke2.aop)}')
     logger.info(f'True Anomaly Diff: {math.degrees(ke1.nu - p4_ke2.nu)}')
+    logger.info(f'Mean Anomaly Diff: {math.degrees(ke1.mean_anomaly - p4_ke2.mean_anomaly)}')
     logger.info(f'TP Diff: {ke1.tp - p4_ke2.tp}')
     logger.info(f'Apogee Radii Diff: {ke1.apogee_radii - p4_ke2.apogee_radii}')
     logger.info(f'Perigee Radii Diff: {ke1.perigee_radii - p4_ke2.perigee_radii}')
