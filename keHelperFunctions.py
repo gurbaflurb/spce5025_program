@@ -1240,3 +1240,16 @@ def apply_delta_v_ke(ke1: KeplerianElements, delta_v) -> KeplerianElements:
      ke2 = KeplerianElements(ke1.r_vector[0], ke1.r_vector[1], ke1.r_vector[2], v_post[0], v_post[1], v_post[2])
 
      return ke2
+
+def compute_phase_rate(tp, alt_tp):
+     '''Given two Orbital periods, computes the phase rate between the two'''
+
+     two_pi = 2*math.pi
+
+     pt1 = 1/tp
+
+     pt2 = 1/alt_tp
+
+     phase_rate = two_pi*(pt1-pt2)
+
+     return phase_rate

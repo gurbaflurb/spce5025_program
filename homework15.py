@@ -113,14 +113,24 @@ def main(args):
     # Problem 6
     # Phase rate between given orbit and one with period of 728.0 minutes
     print('----- Problem 6 -----')
-    
+    logger.info('Computing the phase rate between the provided orbit and an orbital period of 728m')
+    p6_phase_rate = keHelperFunctions.compute_phase_rate(ke1.tp, 728*60)
+    logger.info(f'Phase Rate: {p6_phase_rate} radians/second')
+    logger.info(f'Phase Rate: {math.degrees(p6_phase_rate)} deg/second')
+    logger.info(f'Phase Rate: {math.degrees(p6_phase_rate)*3600} deg/hour')
+    logger.info(f'Phase Rate: {(math.degrees(p6_phase_rate)*3600)*24} deg/day')
     print()
 
 
     # Problem 7
     # Time required for phase angle to change by 30 degrees
     print('----- Problem 7 -----')
-
+    logger.info('Computing time for phase rate to reach 30 degrees')
+    p7_time_to_angle = 30/math.degrees(p6_phase_rate) # In seconds
+    logger.info(f'Time for 30 degree change: {p7_time_to_angle} seconds')
+    logger.info(f'Time for 30 degree change: {p7_time_to_angle/60} minutes')
+    logger.info(f'Time for 30 degree change: {(p7_time_to_angle/60)/60} hours')
+    logger.info(f'Time for 30 degree change: {((p7_time_to_angle/60)/60)/24} days')
     print()
 
 if __name__ == '__main__':
