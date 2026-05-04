@@ -62,33 +62,47 @@ def main():
 
     # Problem 2
     print('----- Problem 2 -----')
+    logger.info(f'Chaser Orbital Period: {chaser.tp} seconds')
+    logger.info(f'Target Orbital Period: {target.tp} seconds')
+    print()
 
     # Problem 3
     print('----- Problem 3 -----')
+    p3_sma_diff = target.semi_major_axis - chaser.semi_major_axis
+    logger.info(f'SMA Difference between target and chaser: {p3_sma_diff} meters')
+    print()
 
     # Problem 4
     print('----- Problem 4 -----')
+    
 
     # Problem 5
     print('----- Problem 5 -----')
 
+
     # Problem 6
     print('----- Problem 6 -----')
+
 
     # Problem 7
     print('----- Problem 7 -----')
 
+
     # Problem 8
     print('----- Problem 8 -----')
+
 
     # Problem 9
     print('----- Problem 9 -----')
 
+
     # Problem 10
     print('----- Problem 10 -----')
 
+
     # Problem 11
     print('----- Problem 11 -----')
+    
 
     # Problem 12
     print('----- Problem 12 -----')
