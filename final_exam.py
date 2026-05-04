@@ -74,14 +74,27 @@ def main():
 
     # Problem 4
     print('----- Problem 4 -----')
-    
+    # Delta-V required to change SMA by problem 3 difference
+    print('----- Problem 3 -----')
+    logger.info('Computing Delta-V to change SMA by problem 3 SMA difference')
+    p4_delta_v = keHelperFunctions.estimate_in_plane_burn(chaser.tp, p3_sma_diff)
+    logger.info(f'Delta-V to adjust chaser orbital period to target orbital period: {p4_delta_v} m/s')
+    print()
 
     # Problem 5
     print('----- Problem 5 -----')
+    # p5_phase_angle = keHelperFunctions.compute_phase_rate(chaser.tp, target.tp)
+    print()
 
 
     # Problem 6
     print('----- Problem 6 -----')
+    p6_phase_rate_angle = keHelperFunctions.compute_phase_rate(chaser.tp, target.tp)
+    logger.info(f'Current phase angle at epoch: {p6_phase_rate_angle} radians/second')
+    logger.info(f'Current phase angle at epoch: {math.degrees(p6_phase_rate_angle)} deg/second')
+    logger.info(f'Current phase angle at epoch: {math.degrees(p6_phase_rate_angle)*3600} deg/hour')
+    logger.info(f'Current phase angle at epoch: {(math.degrees(p6_phase_rate_angle)*3600)*24} deg/day')
+    print()
 
 
     # Problem 7
@@ -118,6 +131,8 @@ def main():
 
     # Problem 16
     print('----- Problem 16 -----')
+    # End epoch provided: 2012-05-02 00:00:00
+    p16_end_epoch = datetime.datetime(2012, 5, 2, 0, 0, 0)
 
     # Problem 17
     print('----- Problem 17 -----')
