@@ -83,13 +83,36 @@ def main():
 
     # Problem 5
     print('----- Problem 5 -----')
-    # p5_phase_angle = keHelperFunctions.compute_phase_rate(chaser.tp, target.tp)
+    p5_phase_angle = dgsa.determine_angle_between_two_sv(target.r_vector, chaser.r_vector)
+    logger.info(f'Phase between Target and Chaser: {math.degrees(p5_phase_angle)}')
+    
+    # chaser_cur_pos = chaser.r_vector
+    # chaser_cur_vel = chaser.r_dot_vector
+
+    # target_cur_pos = target.r_vector
+    # target_cur_vel = target.r_dot_vector
+
+    # for i in range(1,1001):
+    #     chaser_new_pos, chaser_new_vel = keHelperFunctions.keplarian_rk4(chaser_cur_pos, chaser_cur_vel, 60, chaser.mu)
+    #     target_new_pos, target_new_vel = keHelperFunctions.keplarian_rk4(target_cur_pos, target_cur_vel, 60, target.mu)
+
+    #     new_phase_angle = dgsa.determine_angle_between_two_sv(target_new_pos, chaser_new_pos)
+
+    #     chaser_cur_pos = chaser_new_pos
+    #     chaser_cur_vel = chaser_new_vel
+    #     target_cur_pos = target_new_pos
+    #     target_cur_vel = target_new_vel
+
+    #     print(f'New Phase Angle: {math.degrees(new_phase_angle)} deg at {epoch + datetime.timedelta(seconds=i*60)}')
+
+
+
     print()
 
 
     # Problem 6
     print('----- Problem 6 -----')
-    p6_phase_rate_angle = keHelperFunctions.compute_phase_rate(chaser.tp, target.tp)
+    p6_phase_rate_angle = keHelperFunctions.compute_phase_rate(target.tp, chaser.tp)
     logger.info(f'Current phase angle at epoch: {p6_phase_rate_angle} radians/second')
     logger.info(f'Current phase angle at epoch: {math.degrees(p6_phase_rate_angle)} deg/second')
     logger.info(f'Current phase angle at epoch: {math.degrees(p6_phase_rate_angle)*3600} deg/hour')

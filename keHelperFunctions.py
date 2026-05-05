@@ -1253,3 +1253,7 @@ def compute_phase_rate(tp, alt_tp):
      phase_rate = two_pi*(pt1-pt2)
 
      return phase_rate
+
+def compute_phase_angle(ke1_r_vector, ke2_r_vector):
+     ''''''
+     

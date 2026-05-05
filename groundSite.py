@@ -25,6 +25,7 @@ class GroundSite():
     
 
     def compute_ecef_coords(self):
+        '''Takes in the geodetic latitude, longitude, and the height, then computes the ECEF coordinates'''
         # From WGS-84
         earth_radius = 6378137
         flattening = 1/298.257223563
