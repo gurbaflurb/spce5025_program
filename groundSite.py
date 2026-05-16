@@ -239,6 +239,13 @@ class GroundSite():
         b = np.linalg.norm(sv2_pos)
         c = np.linalg.norm(r3_vector)
 
-        theta = math.acos((math.pow(c, 2)- math.pow(a, 2) - math.pow(b, 2))/(2*a*b))
+        # print(f'R3 Vector: {r3_vector}')
+        # print(f'A: {a}')
+        # print(f'B: {b}')
+        # print(f'C: {c}')
+        try:
+            theta = math.acos((math.pow(c, 2)- math.pow(a, 2) - math.pow(b, 2))/(2*a*b))
+        except ValueError:
+            theta = 0
 
         return theta
