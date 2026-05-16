@@ -1254,6 +1254,24 @@ def compute_phase_rate(tp, alt_tp):
 
      return phase_rate
 
-def compute_phase_angle(ke1_r_vector, ke2_r_vector):
-     ''''''
+def get_hohmann_transfer_burns(mu, apogee_initial, apogee_final):
+     '''Takes in the mu, initial apogee, and final apogee. Returns two burns, one for the intermediate, and one for the circularization'''
      
+     print(f'SMA of Initial Apogee: {apogee_initial}')
+     print(f'SMA of Final Apogee: {apogee_final}')
+
+     v1 = math.sqrt(mu/apogee_initial)
+
+     v2 = math.sqrt(mu/apogee_final)
+
+     a_int = (apogee_initial + apogee_final)/2
+
+     v_int1 = math.sqrt(mu*((2/apogee_initial)-(1/a_int)))
+
+     v_int2 = math.sqrt(mu*((2/apogee_final)-(1/a_int)))
+
+     burn1_delta_v = v_int1 - v1
+
+     burn2_delta_v = v2 - v_int2
+
+     return (burn1_delta_v, burn2_delta_v)
