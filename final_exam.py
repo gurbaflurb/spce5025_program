@@ -142,10 +142,59 @@ def main(args):
     print()
 
 
-    logger.info('Calculating seconds to intercept')
-    seconds_to_rendezvous = np.abs(math.degrees(p5_phase_angle)/math.degrees(p6_phase_rate_angle))
-    logger.info(f'Seconds to Rendevous: {seconds_to_rendezvous}')
-    seconds_to_burn1 = seconds_to_rendezvous- int(chaser.tp/2)
+    logger.info('Calculating Hohmann Burns')
+
+    burn1, burn2 = keHelperFunctions.get_hohmann_transfer_burns(chaser.mu, chaser.semi_major_axis, target.semi_major_axis)
+
+    logger.info(f'Burn 1 to Intermediate Delta-v: {burn1}')
+    logger.info(f'Burn 2 to Intermediate Delta-v: {burn2}')
+
+    print()
+
+    logger.info('Applying burn1 delta-v to chaser!')
+
+    test_intermediate_chaser_ke = keHelperFunctions.apply_delta_v_ke(chaser, burn1)
+    logger.info('----- Chaser Intermediate Orbit -----')
+    test_intermediate_chaser_ke.print_ke()
+    print()
+
+    logger.info('Computing Intermediate Phase Rate Angle')
+    intermediate_phase_rate_angle = keHelperFunctions.compute_phase_rate(target.tp, test_intermediate_chaser_ke.tp)
+
+    logger.info('Computing distance covered over half the intermediate orbit')
+    half_orbit_iteration = np.abs(test_intermediate_chaser_ke.tp/2 * math.degrees(intermediate_phase_rate_angle))
+    logger.info(f'Degrees changed over half the intermediate orbit: {half_orbit_iteration} deg')
+
+    half_orbit_angular_change = math.degrees(p5_phase_angle) - half_orbit_iteration
+    logger.info(f'Phase Angle Angular distance we need to travel: {half_orbit_angular_change}')
+
+    angular_time_to_first_burn = np.abs(half_orbit_angular_change/math.degrees(p6_phase_rate_angle))
+    logger.info(f'Seconds to Angular first burn: {angular_time_to_first_burn}')
+
+    first_burn_epoch = epoch + datetime.timedelta(seconds=angular_time_to_first_burn)
+    logger.info(f'Time to first burn: {first_burn_epoch}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # logger.info('Calculating seconds to intercept')
+    # seconds_to_rendezvous = np.abs(math.degrees(p5_phase_angle)/math.degrees(p6_phase_rate_angle))
+    # logger.info(f'Seconds to Rendevous: {seconds_to_rendezvous}')
+    # seconds_to_burn1 = seconds_to_rendezvous - int(chaser.tp/2)
+    # logger.info(f'Seconds to Burn 1: {seconds_to_burn1}')
 
     ###### For problem 7 and on, it makes more sense to simulate the entire scenario, save the data, and answer each question using that data ######
     
@@ -173,8 +222,12 @@ def main(args):
 
     logger.info('Target Orbit Propagated 86400 seconds!')
 
+    # Set a counter to count up the seconds since the epoch
+    seconds_since_epoch = 0
 
-    logger.info('Propagating Chaser Orbit out to first burn!')
+
+
+    logger.info(f'Propagating Chaser Orbit out to first burn')
 
     chaser_initial_orbit_data = []
     chaser_initial_orbit_data.append([0, 0, chaser.r_vector[0], chaser.r_vector[1], chaser.r_vector[2], chaser.r_dot_vector[0], chaser.r_dot_vector[1], chaser.r_dot_vector[2]])
@@ -182,31 +235,29 @@ def main(args):
     chaser_cur_pos = chaser.r_vector
     chaser_cur_vel = chaser.r_dot_vector
 
-    for i in range(1, int(seconds_to_rendezvous)+1):
+    for i in range(1, int(angular_time_to_first_burn)+1):
         chaser_new_pos, chaser_new_vel = keHelperFunctions.keplarian_rk4(chaser_cur_pos, chaser_cur_vel, 1, chaser.mu)
 
         chaser_cur_pos = chaser_new_pos
         chaser_cur_vel = chaser_new_vel
 
+        seconds_since_epoch += 1
+
         data_line = [i, i, chaser_new_pos[0], chaser_new_pos[1], chaser_new_pos[2], chaser_new_vel[0], chaser_new_vel[1], chaser_new_vel[2]]
 
         chaser_initial_orbit_data.append(data_line)
+
 
     logger.info('Chaser Orbit Propagated to first burn!')
 
 
     logger.info('Calculating Hohmann Burns')
 
-    first_burn_target_data = target_two_day_orbit_data[int(seconds_to_rendezvous)]
+    first_burn_target_data = target_two_day_orbit_data[int(seconds_since_epoch)]
     first_burn_target_ke = KeplerianElements(first_burn_target_data[2], first_burn_target_data[3], first_burn_target_data[4], first_burn_target_data[5], first_burn_target_data[6], first_burn_target_data[7])
 
-    first_burn_chaser_data = chaser_initial_orbit_data[int(seconds_to_rendezvous)]
+    first_burn_chaser_data = chaser_initial_orbit_data[int(seconds_since_epoch)]
     first_burn_chaser_ke = KeplerianElements(first_burn_chaser_data[2], first_burn_chaser_data[3], first_burn_chaser_data[4], first_burn_chaser_data[5], first_burn_chaser_data[6], first_burn_chaser_data[7])
-
-    burn1, burn2 = keHelperFunctions.get_hohmann_transfer_burns(first_burn_chaser_ke.mu, first_burn_chaser_ke.semi_major_axis, first_burn_target_ke.semi_major_axis)
-
-    logger.info(f'Burn 1 to Intermediate Delta-v: {burn1}')
-    logger.info(f'Burn 2 to Intermediate Delta-v: {burn2}')
 
     logger.info('Applying burn1 delta-v to chaser!')
 
@@ -219,17 +270,23 @@ def main(args):
     print()
 
     intermediate_phase_angle = dgsa.determine_angle_between_two_sv(first_burn_target_ke.r_vector, intermediate_chaser_ke.r_vector)
-    logger.info(f'Phase Angle between Intermediate Chaser and Target: {intermediate_phase_angle}')
+    logger.info(f'Phase Angle between Intermediate Chaser and Target: {math.degrees(intermediate_phase_angle)}')
     print()
 
     intermediate_phase_rate_angle = keHelperFunctions.compute_phase_rate(first_burn_target_ke.tp, intermediate_chaser_ke.tp)
-    logger.info(f'Current phase angle at epoch: {intermediate_phase_rate_angle} radians/second')
-    logger.info(f'Current phase angle at epoch: {math.degrees(intermediate_phase_rate_angle)} deg/second')
-    logger.info(f'Current phase angle at epoch: {math.degrees(intermediate_phase_rate_angle)*3600} deg/hour')
-    logger.info(f'Current phase angle at epoch: {(math.degrees(intermediate_phase_rate_angle)*3600)*24} deg/day')
+    logger.info(f'Current phase angle at intermediate: {intermediate_phase_rate_angle} radians/second')
+    logger.info(f'Current phase angle at intermediate: {math.degrees(intermediate_phase_rate_angle)} deg/second')
+    logger.info(f'Current phase angle at intermediate: {math.degrees(intermediate_phase_rate_angle)*3600} deg/hour')
+    logger.info(f'Current phase angle at intermediate: {(math.degrees(intermediate_phase_rate_angle)*3600)*24} deg/day')
     print()
 
+    seconds_to_burn2 = np.abs(math.degrees(intermediate_phase_angle)/math.degrees(intermediate_phase_rate_angle))
 
+    logger.info(f'Seconds to Second Burn: {seconds_to_burn2}')
+
+    second_burn_epoch = first_burn_epoch + datetime.timedelta(seconds=seconds_to_burn2)
+
+    logger.info(f'Second Burn Epoch: {second_burn_epoch}')
 
 
 
@@ -284,25 +341,40 @@ def main(args):
     intermediate_chaser_cur_pos = intermediate_chaser_ke.r_vector
     intermediate_chaser_cur_vel = intermediate_chaser_ke.r_dot_vector
 
-    iterations = int((intermediate_chaser_ke.tp/2))+1
+    # logger.info('Computing distance covered over half the intermediate orbit')
+    # half_orbit_iteration = np.abs(intermediate_chaser_ke.tp/2 * math.degrees(intermediate_phase_rate_angle))
+    # logger.info(f'Degrees changed over half the intermediate orbit: {half_orbit_iteration} deg')
+    # half_orbit_angular_change = math.degrees(p5_phase_angle) - half_orbit_iteration
+    # logger.info(f'Phase Angle Angular distance we need to travel: {half_orbit_angular_change}')
+    # angular_time_to_first_burn = np.abs(half_orbit_angular_change/math.degrees(p6_phase_rate_angle))
+    # logger.info(f'Seconds to Angular first burn: {angular_time_to_first_burn}')
+
+
+    # iterations = int(seconds_to_burn2 - chaser.tp/2) + 3 # Old method where I was kinda correct
+    # iterations = int(seconds_to_burn2)
+    iterations = np.abs((second_burn_epoch - first_burn_epoch).total_seconds())
 
     logger.info(f'Iterations until Second Burn Point: {iterations}')
 
-    for i in range(1, iterations+1):
+    for i in range(1, int(iterations)+1):
         intermediate_chaser_new_pos, intermediate_chaser_new_vel = keHelperFunctions.keplarian_rk4(intermediate_chaser_cur_pos, intermediate_chaser_cur_vel, 1, intermediate_chaser_ke.mu)
 
         intermediate_chaser_cur_pos = intermediate_chaser_new_pos
         intermediate_chaser_cur_vel = intermediate_chaser_new_vel
 
-        data_line = [i, i, intermediate_chaser_new_pos[0], intermediate_chaser_new_pos[1], intermediate_chaser_new_pos[2], intermediate_chaser_new_vel[0], intermediate_chaser_new_vel[1], intermediate_chaser_new_vel[2]]
+        seconds_since_epoch += 1
+
+        data_line = [i, seconds_since_epoch, intermediate_chaser_new_pos[0], intermediate_chaser_new_pos[1], intermediate_chaser_new_pos[2], intermediate_chaser_new_vel[0], intermediate_chaser_new_vel[1], intermediate_chaser_new_vel[2]]
 
         chaser_intermediate_orbit_data.append(data_line)
+
+        
 
     logger.info('Intermediate Orbit Propagated to Second Burn!')
     print()
 
 
-    second_burn_target_data = target_two_day_orbit_data[int(seconds_to_rendezvous)+iterations]
+    second_burn_target_data = target_two_day_orbit_data[seconds_since_epoch]
     second_burn_target_ke = KeplerianElements(second_burn_target_data[2], second_burn_target_data[3], second_burn_target_data[4], second_burn_target_data[5], second_burn_target_data[6], second_burn_target_data[7])
     print(f'Target SMA: {second_burn_target_ke.semi_major_axis}')
 
@@ -322,11 +394,11 @@ def main(args):
     second_burn_target_ke.print_ke()
 
     new_phase_angle_deg = dgsa.determine_angle_between_two_sv(final_chaser_ke.r_vector, second_burn_target_ke.r_vector)
-    print(f'Phase Angle at second Burn: {new_phase_angle_deg}')
+    print(f'Phase Angle at second Burn: {math.degrees(new_phase_angle_deg)}')
 
     print()
 
-    iterations_to_next_day = int((86400 - ((int(seconds_to_rendezvous) + iterations) )))
+    iterations_to_next_day = 86401 - seconds_since_epoch
 
     logger.info(f'Propagating Final Orbit Out {iterations_to_next_day} seconds')
 
@@ -342,7 +414,9 @@ def main(args):
         final_chaser_cur_pos = final_chaser_new_pos
         final_chaser_cur_vel = final_chaser_new_vel
 
-        data_line = [i, i, final_chaser_cur_pos[0], final_chaser_cur_pos[1], final_chaser_cur_pos[2], final_chaser_cur_vel[0], final_chaser_cur_vel[1], final_chaser_cur_vel[2]]
+        seconds_since_epoch += 1
+
+        data_line = [i, seconds_since_epoch, final_chaser_cur_pos[0], final_chaser_cur_pos[1], final_chaser_cur_pos[2], final_chaser_cur_vel[0], final_chaser_cur_vel[1], final_chaser_cur_vel[2]]
 
         chaser_final_orbit_data.append(data_line)
 
@@ -351,16 +425,13 @@ def main(args):
 
     logger.info(f'Calculating Distance between Chaser and Target')
 
-    distance = np.linalg.norm(second_burn_target_ke.r_vector) - np.linalg.norm(final_chaser_ke.r_vector)
+    distance = np.linalg.norm(second_burn_target_ke.r_vector - final_chaser_ke.r_vector)
 
     logger.info(f'Distance from Target to Chaser: {distance} meters')
 
 
 
-    # EXTRA CREDIT SECTION IF I HAVE TIME!
-    # Once the second burn has occured, plot the angular separation over time. I'm thinking over the period of a day
-    # Thinking about it, if all goes well we should see a slight oscillation over a day
-    print('----- Extra Credit -----')
+    print('----- Problem 17 -----')
 
     all_chaser_data = chaser_initial_orbit_data 
 
@@ -370,9 +441,62 @@ def main(args):
     for line in chaser_final_orbit_data:
         all_chaser_data.append(line)
 
+    first_burn_data = all_chaser_data[int((first_burn_epoch - epoch).total_seconds())]
+    
+    first_burn_ke = KeplerianElements(first_burn_data[2], first_burn_data[3], first_burn_data[4], first_burn_data[5], first_burn_data[6], first_burn_data[7])
+
+    first_burn_ecef_pos = keHelperFunctions.convert_eci_ecef(first_burn_ke.r_vector, int((first_burn_epoch - epoch).total_seconds()))
+
+    relative_pos_dgsa =  dgsa.compute_relative_pos(first_burn_ecef_pos)
+    relative_pos_vtsa =  vtsa.compute_relative_pos(first_burn_ecef_pos)
+
+    dgsa_topo = keHelperFunctions.convert_ecef_topocentric(math.radians(dgsa.lat), math.radians(dgsa.lon), relative_pos_dgsa)
+    vtsa_topo = keHelperFunctions.convert_ecef_topocentric(math.radians(vtsa.lat), math.radians(vtsa.lon), relative_pos_vtsa)
+
+    dgsa_az, dgsa_el = keHelperFunctions.compute_azimuth_elevation(dgsa_topo)
+    vtsa_az, vtsa_el = keHelperFunctions.compute_azimuth_elevation(vtsa_topo)
+
+    print('First Burn Check!')
+    print(f'DGSA AZ: {math.degrees(dgsa_az)}')
+    print(f'DGSA EL: {math.degrees(dgsa_el)}')
+    print(f'VTSA AZ: {math.degrees(vtsa_az)}')
+    print(f'VTSA EL: {math.degrees(vtsa_el)}')
+    print()
+
+    print('----- Problem 18 -----')
+
+    second_burn_data = all_chaser_data[int((second_burn_epoch - epoch).total_seconds())]
+    
+    second_burn_ke = KeplerianElements(second_burn_data[2], second_burn_data[3], second_burn_data[4], second_burn_data[5], second_burn_data[6], second_burn_data[7])
+
+    second_burn_ecef_pos = keHelperFunctions.convert_eci_ecef(second_burn_ke.r_vector, (second_burn_epoch - epoch).total_seconds())
+
+    relative_pos_dgsa =  dgsa.compute_relative_pos(second_burn_ecef_pos)
+    relative_pos_vtsa =  vtsa.compute_relative_pos(second_burn_ecef_pos)
+
+    dgsa_topo = keHelperFunctions.convert_ecef_topocentric(math.radians(dgsa.lat), math.radians(dgsa.lon), relative_pos_dgsa)
+    vtsa_topo = keHelperFunctions.convert_ecef_topocentric(math.radians(vtsa.lat), math.radians(vtsa.lon), relative_pos_vtsa)
+
+    dgsa_az, dgsa_el = keHelperFunctions.compute_azimuth_elevation(dgsa_topo)
+    vtsa_az, vtsa_el = keHelperFunctions.compute_azimuth_elevation(vtsa_topo)
+
+    print('Second Burn Check!')
+    print(f'DGSA AZ: {math.degrees(dgsa_az)}')
+    print(f'DGSA EL: {math.degrees(dgsa_el)}')
+    print(f'VTSA AZ: {math.degrees(vtsa_az)}')
+    print(f'VTSA EL: {math.degrees(vtsa_el)}')
+    print()
+
+    # print('Last line for chaser data')
+    # print(all_chaser_data[-1])
+
     # for line in all_chaser_data:
         # print(line)
 
+    # EXTRA CREDIT SECTION IF I HAVE TIME!
+    # Once the second burn has occured, plot the angular separation over time. I'm thinking over the period of a day
+    # Thinking about it, if all goes well we should see a slight oscillation over a day
+    print('----- Extra Credit -----')
 
 
 

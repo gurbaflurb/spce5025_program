@@ -1256,9 +1256,6 @@ def compute_phase_rate(tp, alt_tp):
 
 def get_hohmann_transfer_burns(mu, apogee_initial, apogee_final):
      '''Takes in the mu, initial apogee, and final apogee. Returns two burns, one for the intermediate, and one for the circularization'''
-     
-     print(f'SMA of Initial Apogee: {apogee_initial}')
-     print(f'SMA of Final Apogee: {apogee_final}')
 
      v1 = math.sqrt(mu/apogee_initial)
 
